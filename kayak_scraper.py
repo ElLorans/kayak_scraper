@@ -1,17 +1,16 @@
 """
 Scrape Kayak
-Version: 0.0.3
-Specs: added error handler in case csv already open
+Version: 0.0.5
+Specs: code more readable
 """
 
 
 import re
+from datetime import date, timedelta, datetime
+
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from datetime import date, timedelta, datetime
-from time import sleep
-from random import random
 
 
 def write_csv(dataframe, csv_name):
@@ -21,16 +20,135 @@ def write_csv(dataframe, csv_name):
     try:
         dataframe.to_csv(csv_name, index=False)
 
-    except:
-        print("\n!" * 20)
+    except PermissionError:
+        print("\n", "!" * 20)
         print(csv_name, "IS OPEN!! Close the file and confirm")
         confirmation = input(f"Have you closed {csv_name}?")
         if confirmation.lower == "yes":
             write_csv(dataframe, csv_name)
 
-            
-# Cookie must be updated every tot (2 weeks???) Last Cookie: 26 Nov 2019
-headers = {
+
+class KayakScraper:                          # class in order to have .error attribute
+    """
+    self.data for pd.DataFrame with data; self.error for error.
+    """
+    def __init__(self, html: str, route: str, url: str, departing_date: str) -> None:
+        """
+        Scrape Kayak best flight page and update self.data (Calls kayak_scraper method).
+        :param html: str (html format)
+        :param route: str (e.g.: "LAX-ATL")
+        :param url: str
+        :param departing_date: str
+        :return: None
+        """
+        self.data = None                            # after initializing: pd.DataFrame
+        self.error = None                           # after initializing: "DROPDOWNS MISSINg" or "RECAPTCHA" or False
+        self.kayak_scraper(html, route, url, departing_date)
+
+    def kayak_scraper(self, html: str, flight_route: str, kayak_url: str, flight_date: str) -> None:
+        """
+        Scrape Kayak best flight page and update self.data (Called by __init__ method).
+        :param html: str (html format)
+        :param flight_route: str (e.g.: "LAX-ATL")
+        :param kayak_url: str
+        :param flight_date: str
+        :return: None
+        """
+        today = str(date.today())
+        now_time = str(datetime.now().time())[:-7]
+
+        print("Parsing html")
+        soup = BeautifulSoup(html, "lxml")
+        dropdowns = soup.find_all("div", {"class": "multibook-dropdown"})
+        print("Html parsed")
+
+        if len(dropdowns) == 0:  # if dropdowns fails
+            # write file to see error page (only last error will be saved)
+
+            if "real KAYAK user" in html:
+                self.error = "RECAPTCHA"
+                print(self.error)
+
+            else:
+                self.error = "DROPDOWNS MISSING"
+                print(self.error)
+
+                with open("no_dropdowns.html", "w", encoding="utf-8") as file:
+                    file.write(html)
+
+            print(self.error)
+            error = [self.error]
+            data = {"arrival": error, "carrier": error, "departure": error, "flight_date": flight_date,
+                    "is_best_flight": error, "price": error, "route": [flight_route], "website": error,
+                    "url": [kayak_url], "retrieved_on": [today], "retrieved_at": [now_time]}
+
+            self.data = pd.DataFrame(data)
+
+        else:  # if len(dropdowns) > 0:             # (as intended)
+            self.error = False
+            prices = list()
+            websites = list()
+            for dropdown in dropdowns:
+                pretty = dropdown.text.strip("\n").replace(" Economy", "").strip("Vedi offerta")\
+                    .replace("View Deal", "").replace("Basic", "").replace("Cabina principale", "")\
+                    .replace("Main Cabin", "").strip().replace("\n", "")
+
+                # set ticket_price and web
+                if "$" in dropdown.text:  # $ IS BEFORE PRICE AND CARRIER
+                    match = re.compile("[^\W\d]").search(pretty)  # find first letter in string
+                    # first char is currency, so from second to letter is price
+                    ticket_price = pretty[1:match.start()]
+                    website = pretty[match.start():].split("Book")[0]
+
+                elif "€" in dropdown.text:  # € IS BETWEEN PRICE AND CARRIER
+                    ticket_price = pretty.split("€")[0].strip()
+                    website = pretty.split("€")[1].split("Book")[0]
+
+                else:
+                    ticket_price = "No price"
+                    website = pretty.replace("Info", "").split("Book")[0]
+                    # print("NO PRICE FOUND:", dropdown.text.replace("\n", ""))    # ONLY SOUTHWEST PRICES ARE NOT FOUND
+                # ticket_price and web have been set
+
+                prices.append(ticket_price)
+                website = website.split("View Deal")[0]
+                websites.append(website)
+
+            arrival = [arr.text for arr in soup.find_all("span", {"class": "arrival-time base-time"})]
+
+            carrier = [carr.text.strip() for carr in soup.find_all("div", {"class": "bottom"})]
+            while '' in carrier:
+                carrier.remove('')
+            carrier = carrier[0::2]                         # removes even position carriers because they are empty str
+
+            departure = [depart.text for depart in soup.find_all("span", {"class": "depart-time base-time"})]
+
+            is_best_flight = [False for _ in dropdowns]
+            is_best_flight[0] = True  # first flight should be the best one: IMPLEMENT CHECK????
+
+            data = {"arrival": arrival, "carrier": carrier, "departure": departure, "is_best_flight": is_best_flight,
+                    "price": prices, "website": websites}
+
+            self.data = pd.DataFrame(data)
+
+            self.data["flight_date"] = flight_date
+            self.data["route"] = flight_route
+            self.data["url"] = kayak_url
+            self.data["retrieved_at"] = now_time
+            self.data["retrieved_on"] = today
+
+
+def kayak_requester_range(start_range: int, end_range: int, flight_route: str) -> None:
+    """
+    Create db.csv file for flights departing every day from start_range to end_range excluded.
+    :param start_range: int (e.g.: 0)
+    :param end_range: int (e.g.: 160)
+    :param flight_route: str (e.g.: "LAX-ATL")
+    :return: None
+    """
+
+    # Cookie must be updated every tot (2 weeks???) Last Cookie: 26 Nov 2019
+    headers = {
         "Host": "www.kayak.com",
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -55,108 +173,67 @@ headers = {
         "Upgrade-Insecure-Requests": "1",
         "Cache-Control": "max-age=0",
         "TE": "Trailers"
-            }
+    }
 
-route = "LAX-ATL"
+    with requests.session() as s:
+        for num in range(start_range, end_range):
 
-with requests.session() as s:
-    for num in range(99, 160):
-        print("READING DATA")
-        starting_df = pd.read_csv("db.csv")
-        print("DATA READ")
-        tgt_date = date.today() + timedelta(num)
-        # get direct flights for route on date
-        url = f"https://www.kayak.com/flights/{route}/{tgt_date}?sort=bestflight_a&fs=stops=0"
-        headers["Referer"] = url
-        print("\n" + url)
-        resp = s.get(url, headers=headers)
-        print("Url requested")
-        
-        # THIS WORKS ONLY FOR $ and € (IF $ IS BEFORE PRICE AND CARRIER and IF € IS BETWEEN PRICE AND CARRIER)
-        soup = BeautifulSoup(resp.text, "lxml")
-        dropdowns = soup.find_all("div", {"class": "multibook-dropdown"})
-        print("Soup cooked")
-        
-        if len(dropdowns) == 0:       # if dropdowns fails
-            # write file to see error page (only last error will be saved)
-            
-            if "real KAYAK user" in resp.text:
-                error = ["RECAPTCHA"]
+            print("READING DATA")
+            try:
+                starting_df = pd.read_csv("db.csv")
+                print("DATA READ")
+            except FileNotFoundError:
+                print("ERROR: db.csv NOT FOUND")
+                column_names = ["arrival", "carrier", "departure", "is_best_flight", "price", "website", "flight_date",
+                                "route", "url", "retrieved_at", "retrieved_on"]
+                starting_df = pd.DataFrame(columns=column_names)    # empty df
+                print("db.csv CREATED")
+                write_csv(starting_df, "db.csv")
 
-            else:
-                error = ["DROPDOWNS MISSING"]
+            tgt_date = date.today() + timedelta(num)
+            # get direct flights for route on date
+            url = f"https://www.kayak.com/flights/{flight_route}/{tgt_date}?sort=bestflight_a&fs=stops=0"
+            headers["Referer"] = url        # update referer header for cookies. Unclear if needed
+            print("\n" + url)
+            resp = s.get(url, headers=headers)
+            print("Url requested")
 
-                with open("no_dropdowns.html", "w", encoding="utf-8") as f:
-                    f.write(resp.text) 
-            
-            print(error[0])
-                
-            result = {"price": error, "website": error, "is_best_flight": error, 
-                      "departure": error, "arrival": error, "carrier": error, 
-                      "retrieved_on": [str(datetime.now())], "flight_date": [tgt_date], "route": [route], "url": [url]}
-            
-            df = pd.DataFrame(result)
-            df = pd.concat([starting_df, df], ignore_index=True, sort=False)
+            scraped = KayakScraper(resp.text, flight_route, url, str(tgt_date))
 
+            df = pd.concat([starting_df, scraped.data], ignore_index=True, sort=False)
+
+            print("SAVING DATA", str(datetime.now().time())[:-7])
             write_csv(df, "db.csv")
-            
-            if error == ["RECAPTCHA"]:     # stop loop
-                print(num)
+            print("DATA SAVED:", str(datetime.now().time())[:-7])
+
+            if scraped.error is "RECAPTCHA":
+                print("ABORTING")
                 break
-            
-        else:                        # if dropdowns as intended
-            price = list()
-            website = list()
-            for dropdown in dropdowns:
-                pretty = dropdown.text.strip("\n").replace(" Economy", "").strip("Vedi offerta")
-                pretty = pretty.replace("View Deal", "").replace("Basic", "")
-                pretty = pretty.replace("Cabina principale", "").replace("Main Cabin", "").strip().replace("\n", "")
+            elif scraped.error is "DROPDOWNS MISSING":
+                resp = s.get(url, headers=headers)
+                print("Url requested AGAIN")
 
-                if "$" in dropdown.text:        # $ IS BEFORE PRICE AND CARRIER
-                    match = re.compile("[^\W\d]").search(pretty)    # find first letter in string
-                    # first char is currency, so from second to letter is price
-                    ticket_price = pretty[1:match.start()]          
-                    price.append(ticket_price)
-                    web = pretty[match.start():]
+                scraped = KayakScraper(resp.text, flight_route, url, str(tgt_date))
 
-                elif "€" in dropdown.text:     # € IS BETWEEN PRICE AND CARRIER
-                    ticket_price = pretty.split("€")[0].strip()
-                    price.append(ticket_price)
-                    web = pretty.split("€")[1]
-                else:
-                    price.append("No price")
-                    web = pretty.replace("Info", "")
+                df = pd.concat([starting_df, scraped.data], ignore_index=True, sort=False)
 
-                web = web.split("View Deal")[0]
-                website.append(web)
+                print("SAVING DATA", str(datetime.now().time())[:-7])
+                write_csv(df, "db.csv")
+                print("DATA SAVED:", str(datetime.now().time())[:-7])
 
-            is_best_flight = [False for dropdown in dropdowns]
-            is_best_flight[0] = True                            # first flight should be the best one: IMPLEMENT CHECK????
+    print("-" * 30)
+    print("END")
 
-            departure = [depart.text for depart in soup.find_all("span", {"class": "depart-time base-time"})]
-            arrival = [arr.text for arr in soup.find_all("span", {"class": "arrival-time base-time"})]
-            
-            carrier = [carr.text.strip() for carr in soup.find_all("div", {"class": "bottom"})]
-            while '' in carrier:
-                carrier.remove('')
-            carrier = carrier[0::2]    # removes even position carriers because they are useless
 
-            result = {"price": price, "website": website, "is_best_flight": is_best_flight, "departure": departure, 
-                      "arrival": arrival, "carrier": carrier}
+def kayak_requester():
+    pass
 
-            print("Converting data to DF")
-            df = pd.DataFrame(result)
-            now = datetime.now()
-            df["retrieved_on"] = now
-            df["flight_date"] = tgt_date
-            df["route"] = route
-            df["url"] = url
-            df = pd.concat([starting_df, df], ignore_index=True, sort=False)
 
-            write_csv(df, "db.csv")
-            
-            #sleep(random()*4)                # random pause to avoid recaptcha
-            print("DATA SAVED:", now)
-
-print("\nEND!!")
-print("-"*30)
+if __name__ == "__main__":
+    # with open("kayakked.html", encoding="utf-8") as f:
+    #     t = f.read()
+    # d = KayakScraper(t, "LAX-ATL", "www.test", "14-07-20")
+    # d.data.to_csv("t.csv")
+    st = input("Insert starting date:")
+    e = input("Insert final date (excluded):")
+    kayak_requester_range(int(st), int(e), "LAX-ATL")
