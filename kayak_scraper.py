@@ -273,57 +273,57 @@ if __name__ == "__main__":
 
     my_route = "LAX-ATL"
 
-    with open("missing_dates.txt") as f:
-        missing_dates = f.readlines()
+    # with open("missing_dates.txt") as f:
+    #     missing_dates = f.readlines()
+    #
+    # formatted_dates = [datetime.strptime(elem.strip(), '%d-%m-%y').date() for elem in missing_dates]
+    #
+    # # copy headers here
+    # my_headers = {
+    #     "Host": "www.kayak.com",
+    #     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0",
+    #     # "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    #     "Accept-Language": "en-US,en;q=0.5",
+    #     "Accept-Encoding": "gzip, deflate, br",
+    #     "Connection": "keep-alive",
+    #     "Upgrade-Insecure-Requests": "1",
+    #     "Cache-Control": "max-age=0",
+    #     "TE": "Trailers",
+    #     "Accept": "*/*",
+    #     "Referer": "https://www.kayak.com",
+    #     "Content-type": "application/x-www-form-urlencoded",
+    #     "Origin": "https://www.kayak.com",
+    #
+    #     # cookie retrieved METHOD POST DOMAIN www.kayak.com FILE collector. Shouldn't it be under GET??
+    #     "Cookie": 'vid=1ed3f1e2-1001-11ea-9d54-0242ac12000c; vid=1ed3f1e2-1001-11ea-9d54-0242ac12000c; '
+    #               'xp-session-seg=xp20; Apache=JAFJAB1D8Ddhww$Jbk538w-AAABbnn3YNw-98-YclfRQ; '
+    #               'kayak=Jv1vDB_C2TAPMt2$Fzna; kayak.mc'
+    #               '=Adb2nXsU9zQyjBymb6rKZk5jtrx1pzhfVQCnsEMLyfa3UabrS_crZxLmahh1xpukY7sQ46OeysLYSgsmL9u5UEmsLI0yWKhNhx'
+    #               'a0xAh85mqBaGiFaqDg0xpm-SSz4Vj8nFLm47wl_SjunwXpU3VzjN-D0Vh5jYrt7Mc-uVqDzxzsqDf9UnPz4Cohi1zu3VfnHnM0R6'
+    #               'ArZPhpjPpkSUe53l_KjHdqM0plm8K90YP-POnse4xCg-M1jO_-m8dUhBoMCHgAoHmBgLBqewRNLFo_rYV8B-9uWI5mQ5OlZ-LrU'
+    #               'CuoNfZB1Jms2EH7yR9zarTqS0zFHlSLmaHcNa8kkUOLe3ertvlrDM6HYoLob7lvZBfG4l8pvFpo8-kHfub5ufCzOo6HpqqYtgs1k'
+    #               'hbg_CzpGncxGtNAO91taSgzCCctdqonJW0g9xpwY-5umG2MydC_1h-z3HYGWuG2oQEgiVcYlytncQYl5gbMtZfvncTPZLzjQqsO'
+    #               '-jIdY2zJSQRwN-UtRR9cL1XsNr0AY7hryLTMxvk; _pxhd=""; p1.med.sc=17; _pxvid=1ed3f1e2-1001-11ea-9d54-0242'
+    #               'ac12000c; _gcl_au=1.1.777878553.1574740783; _ga=GA1.2.109955462.1574740783; _up=1.2.1950175204.15747'
+    #               '40784; G_ENABLED_IDPS=google; __gads=ID=22dffd3207285d34:T=1574740790:S=ALNI_Mb4b-OLfcBGBRp4DiGjBqsV'
+    #               '82WR7w; _gd_moveFromP13nTopContent="guidesbanner"; intent_media_prefs=; kykprf=274; cluster=5; p1.me'
+    #               'd.sid=H-51sGEXOweTrHBUZBTvxeL-YJ_zj1rrA5PhwASxyRiewanF_Zt_6qCOwegMT4jdw; kmkid=ApLYTE2rbbsgYyeXpP9Me'
+    #               'TU; NSC_q5-tqbslmf-cmvf=ffffffff0989bdf345525d5f4f58455e445a4a422a59; NSC_q5-lbqj-cmvf=ffffffff0989b'
+    #               '94345525d5f4f58455e445a4a42299c; _pxff_tm=1; _gid=GA1.2.1704400075.1579773435; _gat=1; _gat_UA422091'
+    #               '8541=1; _gat_UA4220918542=1; _px3=31d2768d83a8167dfeb29a51904cd657551c94caff79bf4def58f26aa1aca4fb:1'
+    #               'VzBo+ZO8UM8SWW8ztSfGF12yODUZSDDkCxfPaTsnSsB0flQEd3VacQb2KqZsxhOtPyM8Olw8bF2BwLzeBG0Ew==:1000:VIQ9ZG0'
+    #               'BcTgB2s15r+PCVXpx6LQJZA9sfCRetRwUGAOYZ/AZZqOU5cIOiiCex8dd0Ypr2JsdCOS8O6OXtMLXeL'
+    #               '/T7vzrX3cZSrO9SFMzpy3y7Gfnrt6soaPssxCsSD4Q6ZUXpWvWnwUbCscPHvv3+Ke7vUexzJGFN4lw0z3vqYw=; '
+    #               'hiddenParamsLAX-ATL%2F2020-01-23=page_origin%3DF..FD..M0%26src%3D%26searchingagain%3D%26c2s%3D'
+    #               '%26po%3D%26personality%3D%26provider%3D%26pageType%3DFD%26id%3DDR2E '
+    # }
+    #
+    # with HTMLSession() as s:
+    #     for elem in formatted_dates:
+    #         err = kayak_requester(s, my_route, my_headers, str(elem))
+    #         if err == "RECAPTCHA":
+    #             break
 
-    formatted_dates = [datetime.strptime(elem.strip(), '%d-%m-%y').date() for elem in missing_dates]
-
-    # copy headers here
-    my_headers = {
-        "Host": "www.kayak.com",
-        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0",
-        # "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "Cache-Control": "max-age=0",
-        "TE": "Trailers",
-        "Accept": "*/*",
-        "Referer": "https://www.kayak.com",
-        "Content-type": "application/x-www-form-urlencoded",
-        "Origin": "https://www.kayak.com",
-
-        # cookie retrieved METHOD POST DOMAIN www.kayak.com FILE collector. Shouldn't it be under GET??
-        "Cookie": 'vid=1ed3f1e2-1001-11ea-9d54-0242ac12000c; vid=1ed3f1e2-1001-11ea-9d54-0242ac12000c; '
-                  'xp-session-seg=xp20; Apache=JAFJAB1D8Ddhww$Jbk538w-AAABbnn3YNw-98-YclfRQ; '
-                  'kayak=Jv1vDB_C2TAPMt2$Fzna; kayak.mc'
-                  '=Adb2nXsU9zQyjBymb6rKZk5jtrx1pzhfVQCnsEMLyfa3UabrS_crZxLmahh1xpukY7sQ46OeysLYSgsmL9u5UEmsLI0yWKhNhx'
-                  'a0xAh85mqBaGiFaqDg0xpm-SSz4Vj8nFLm47wl_SjunwXpU3VzjN-D0Vh5jYrt7Mc-uVqDzxzsqDf9UnPz4Cohi1zu3VfnHnM0R6'
-                  'ArZPhpjPpkSUe53l_KjHdqM0plm8K90YP-POnse4xCg-M1jO_-m8dUhBoMCHgAoHmBgLBqewRNLFo_rYV8B-9uWI5mQ5OlZ-LrU'
-                  'CuoNfZB1Jms2EH7yR9zarTqS0zFHlSLmaHcNa8kkUOLe3ertvlrDM6HYoLob7lvZBfG4l8pvFpo8-kHfub5ufCzOo6HpqqYtgs1k'
-                  'hbg_CzpGncxGtNAO91taSgzCCctdqonJW0g9xpwY-5umG2MydC_1h-z3HYGWuG2oQEgiVcYlytncQYl5gbMtZfvncTPZLzjQqsO'
-                  '-jIdY2zJSQRwN-UtRR9cL1XsNr0AY7hryLTMxvk; _pxhd=""; p1.med.sc=17; _pxvid=1ed3f1e2-1001-11ea-9d54-0242'
-                  'ac12000c; _gcl_au=1.1.777878553.1574740783; _ga=GA1.2.109955462.1574740783; _up=1.2.1950175204.15747'
-                  '40784; G_ENABLED_IDPS=google; __gads=ID=22dffd3207285d34:T=1574740790:S=ALNI_Mb4b-OLfcBGBRp4DiGjBqsV'
-                  '82WR7w; _gd_moveFromP13nTopContent="guidesbanner"; intent_media_prefs=; kykprf=274; cluster=5; p1.me'
-                  'd.sid=H-51sGEXOweTrHBUZBTvxeL-YJ_zj1rrA5PhwASxyRiewanF_Zt_6qCOwegMT4jdw; kmkid=ApLYTE2rbbsgYyeXpP9Me'
-                  'TU; NSC_q5-tqbslmf-cmvf=ffffffff0989bdf345525d5f4f58455e445a4a422a59; NSC_q5-lbqj-cmvf=ffffffff0989b'
-                  '94345525d5f4f58455e445a4a42299c; _pxff_tm=1; _gid=GA1.2.1704400075.1579773435; _gat=1; _gat_UA422091'
-                  '8541=1; _gat_UA4220918542=1; _px3=31d2768d83a8167dfeb29a51904cd657551c94caff79bf4def58f26aa1aca4fb:1'
-                  'VzBo+ZO8UM8SWW8ztSfGF12yODUZSDDkCxfPaTsnSsB0flQEd3VacQb2KqZsxhOtPyM8Olw8bF2BwLzeBG0Ew==:1000:VIQ9ZG0'
-                  'BcTgB2s15r+PCVXpx6LQJZA9sfCRetRwUGAOYZ/AZZqOU5cIOiiCex8dd0Ypr2JsdCOS8O6OXtMLXeL'
-                  '/T7vzrX3cZSrO9SFMzpy3y7Gfnrt6soaPssxCsSD4Q6ZUXpWvWnwUbCscPHvv3+Ke7vUexzJGFN4lw0z3vqYw=; '
-                  'hiddenParamsLAX-ATL%2F2020-01-23=page_origin%3DF..FD..M0%26src%3D%26searchingagain%3D%26c2s%3D'
-                  '%26po%3D%26personality%3D%26provider%3D%26pageType%3DFD%26id%3DDR2E '
-    }
-
-    with HTMLSession() as s:
-        for elem in formatted_dates:
-            err = kayak_requester(s, my_route, my_headers, str(elem))
-            if err == "RECAPTCHA":
-                break
-
-    # st = input("Insert starting date:") # 99 on 5 February
-    # e = input("Insert final date (excluded):")
-    # kayak_requester_range(int(st), int(e), my_route)
+    st = input("Insert starting date:") # 99 on 5 February
+    e = input("Insert final date (excluded):")
+    kayak_requester_range(int(st), int(e), my_route)
